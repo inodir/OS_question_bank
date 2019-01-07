@@ -1,0 +1,1737 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{amsmath}
+
+\begin{document}
+
+\begin{center}
+{\scriptsize OS all question bank, Fall 2018}
+\end{center}
+
+\vfill\break
+\begin{flushleft}
+\textbf{PROCESS: BASIC DATA STRUCTURE \& SYSTEM CALLS}
+\begin{enumerate}
+\item \textbf{What is a process?}\\
+{\color{red}an instance of a program in execution}
+\item \textbf{What are Lightweight Processes in Linux?\\}
+{\color{red}share a large portion of their kernel data structures and each process has its own process
+descriptor.}
+\item \textbf{ Explain what is meant by multithreaded application. Describe how multithreaded applications are implemented in linux. Give three examples of POSIX-compliant pthread libraries.\\}
+{\color{red}assosiate a lightweight process with each thread\\share same memory address\\ LinuxThread, Native POSIX Thread Library, Next Generation POSIX Threading Package }
+\item \textbf{ Describe thread group in linux.}\\
+{\color{red}set of lightweight processes that implements a multithreading application and acts as a whole to syscalls getpid(),kill(),\_exit()}
+\item \textbf{ What is meant by process descriptor and explain the role of the process descriptor?}\\
+{\color{red}a task\_struct type
+structure whose fields contain all the information related to a single process.\\
+In order to manage processes, the kernel must have a clear picture of what each process is
+doing. It must know, for instance, the process's priority, whether it is running on the CPU or
+blocked on some event, what address space has been assigned to it, which files it is allowed to
+address, and so on.}
+\item \textbf{ With the help of a schematic, describe the Linux process descriptor struct task\_struct.}
+\begin{figure}[H]
+ \centering
+  \includegraphics{1.jpg}
+  \label{fig:1}
+\end{figure}
+\item \textbf{ List the seven possible process states in Linux OS and explain.\\}
+{\color{red}TASK\_RUNNING\\
+TASK\_INTERRUPTIBLE\\
+TASK\_UNINTERRUPTIBLE\\
+TASK\_STOPPED\\
+TASK\_TRACED\\
+EXIT\_ZOMBIE\\
+EXIT\_DEAD\\}
+\item \textbf{ Describe the following process states in linux :}\\
+TASK\_RUNNING\\
+{\color{red}The process is either executing on the CPU or waiting to be executed.}
+\\TASK\_INTERRUPTIBLE\\
+{\color{red}The process is suspended (sleeping) until some condition becomes true. Raising a
+hardware interrupt, releasing a system resource the process is waiting for, or
+delivering a signal are examples of conditions that might wake up the process, that is,
+put its state back to TASK\_RUNNING.}
+\\TASK\_UNINTERRUPTIBLE\\
+{\color{red}Like the previous state, except that delivering a signal to the sleeping process leaves
+its state unchanged. This process state is seldom used. It is valuable, however, under
+certain specific conditions in which a process must wait until a given event occurs
+without being interrupted. }
+\\TASK\_STOPPED\\
+{\color{red}Process execution has been stopped: the process enters this state after receiving a
+SIGSTOP, SIGTSTP, SIGTTIN, or SIGTTOU signal. When a process is being monitored
+by another (such as when a debugger executes a ptrace( ) system call to monitor a
+test program), any signal may put the process in the TASK\_STOPPED state.}
+\\TASK\_TRACED\\
+{\color{red}Process execution has been stopped by DEBUGGER}
+\\EXIT\_ZOMBIE\\
+{\color{red}Process execution is terminated, but the parent process has not yet issued a wait( )-
+like system call (wait( ), wait3( ), wait4( ), or waitpid( )) to return
+information about the dead process. Before the wait( )-like call is issued, the kernel
+cannot discard the data contained in the dead process descriptor because the parent
+could need it.}
+\\EXIT\_DEAD\\
+{\color{red}Process being removed from the system because perrent just issued waitpid()}
+\item \textbf{ State the purpose of TASK\_UNINTERRUPTIBLE state in linux process.}\\
+{\color{red}For instance, this state may be used when a process opens a
+device file and the corresponding device driver starts probing for a corresponding
+hardware device. The device driver must not be interrupted until the probing is
+complete, or the hardware device could be left in an unpredictable state.}
+\item \textbf{ State the two approaches used by kernel to identify a process.\\}
+{\color{red}using 32-bit process descriptor adress or PID}
+\item \textbf{ What is meant by PID? Why is it required?\\}
+{\color{red}Process ID\\allows users to identify processes by
+means of a number}
+\item \textbf{ What is the upper limit on the PID values in 32-bit architectures?}
+{\color{red}32,767}
+\item \textbf{ What is the upper limit on the PID values in 64-bit architectures?}
+{\color{red}4,194,303}
+\item \textbf{ State the purpose of a pidmap\_array bitmap in linux. Indicate the size of the pidmap\_array bitmap.}
+{\color{red}to identify which of the PIDs are used and which are free,\\on 32-bit machine 1page = 4k or more on 64-bit}
+\item \textbf{ Indicate which lightweight process becomes by default the thread group leader. What is the PID assigned to the thread group?\\}
+{\color{red}PID of the first lightweight process in the group,thread group has the PID og the group leader}
+\item \textbf{ Since kernel must be able to handle many processes at the same time, hence process descriptors are stored in ………… memory rather than in the memory area permanently assigned to the kernel.\\}
+{\color{red}Dynamic}
+\item \textbf{ Describe the two different data structures assigned to every process by the kernel in a single per-process memory area. Indicate the length of this memory area and explain the data structures stored in this memory area with the help of a diagram showing clearing both these data structures.\\}
+{\color{red}thread\_info structure, Kernel Mode process stack, 8kb two page frames}
+\begin{figure}[H]
+ \centering
+  \includegraphics{2.jpg}
+  \label{fig:2}
+\end{figure}
+\item \textbf{ Explain the purpose of the following two different data structures assigned to every process by the kernel in a single per-process memory area. Indicate the size of each of these data structures.
+a) Thread\_info structure b) kernel mode process stack\\}
+\begin{figure}[H]
+ \centering
+  \includegraphics{2.jpg}
+  \label{fig:3}
+\end{figure}
+{\color{red}1page frame for tread\_info and one for stack 2 in total}
+\item \textbf{ State the key benefit in terms of efficiency offered by the kernel in providing a close association between the thread\_info structure and the kernel mode stack.\\}
+{\color{red} The kernel  can  easily obtain the address  of the thread\_info structure of the process currently running  on a CPU from the value of the esp register .
+ In fact, if the thread\_union structure is 8KB (213 bytes) long, the kernel  masks out the 13  least significant bits of esp to obtain the base address of the thread\_info structure ;
+ on thethe other hand,if the thread\_union   structure is 4KB long,  kernel masks out the the 12 least significant bits bits of esp }
+\item \textbf{ State the purpose of current macro in linux.\\}
+{\color{red}
+ Most often often the  kernel needs the address of the process descriptor rather than the address  of the thread\_info structure .
+ To get the process descriptor pointerpointer pointer of the process  currently running on a CPU, the kernel  makes use of the current  macro,  which is essentially equivalent  to current\_thread\_info()-\textgreater task
+The current current macro often often appears  in  kernel code as aprefix to fields  of the process descriptor .}
+\item \textbf{ Explain what is meant by process list. Explain how process list is implemented in linux.\\}
+{\color{red}A circular doubly linked list  links together all existing process descriptors\\The prev\_task and next\_task fields of each process
+descriptor are used to implement the list.  The prev\_task field of
+init\_task points to the process descriptor inserted last in the list.;
+we will call it the process list.}
+\item \textbf{ With the help of a block diagram, show the special data structures used to implement the process list. Also indicate the processes the first two nodes in the data structure point to.\\}
+\begin{figure}[H]
+ \centering
+  \includegraphics{3.jpg}
+  \label{fig:3}
+\end{figure}
+{\color{red}The head of the list is the init\_task descriptor
+referenced by the first element of the task array: it is the ancestor of all processes, and it is
+called process 0 or swapper .}
+\item \textbf{ Explain how runqueue is implemented in linux to achieve scheduler speedup to select the best runnable process in constant time.\\}
+{\color{red}it splits the runqueue in many lists of runnable processes,one list per process priority.140 different lists, process priority from 0 to 139 stored in run\_list field}
+\item \textbf{ With the help of a figure, illustrate the relationship between parent and siblings of a group of processes. Process P0 successively created P1, P2, and P3. Process P3, in turn, created process P4}
+\begin{figure}[H]
+ \centering
+  \includegraphics{4.jpg}
+  \label{fig:4}
+\end{figure}
+\item \textbf{ Write short notes on pid hash table and chained lists.\\}
+{\color{red}pidhash table is 4 hash tables one for each type of PID used to speed up the search.\\chaining is used to handle colliding PIDs. each table entery is the head of dubly linked list of colliding process descriptors.}
+\item \textbf{ With the help of block diagram, describe pid hash table and chained lists.}
+\begin{figure}[H]
+ \centering
+  \includegraphics{5.jpg}
+  \label{fig:5}
+\end{figure}
+\item \textbf{ What are the four PID hash tables used in linux. Why are they required?\\}
+{\color{red}PIDTYPE\_PID ; pid field ; PID of the process\\
+PIDTYPE\_TGID; tgid field ; PID of thread group leader process\\
+PIDTYPE\_PGID; pgrp field ; PID of the group leader process\\
+PIDTYPE\_SID ; session field ; PID of the session leader process}
+\item \textbf{ With the help of a block diagram, describe the four hash tables and show how these data structures are implemented showing clearly the chained lists and processes in each group.}
+\begin{figure}[H]
+ \centering
+  \includegraphics{6.jpg}
+  \label{fig:6}
+\end{figure}
+\item \textbf{ Explain the purpose of wait queue in linux.\\}
+{\color{red}process state does not provide enough info to reteieave the process quickly, wait queues is to solve this.\\
+it represents a set of sleeping processes which are woken up by the kernel when some condition becomes true\\
+wait queue doubly linked liist whose elements include pointers to process descriptors it is pprotected using lock spin lock}
+\item \textbf{ Describe runqueue and wait queues in Linux.\\}
+{\color{red}a doubly linked circular list of TASK\_RUNNING
+processes called runqueue has been introduced. The process descriptors include the next\_run
+and prev\_run fields to implement the runqueue list. As in the previous case, the init\_task
+process descriptor plays the role of list header. The nr\_running variable stores the total
+number of runnable processes. linux splits runqueue to 140 lists.}
+\item \textbf{ Indicate the three important uses of the wait queues in the kernel.\\}
+{\color{red}Intrupt handling,Process syncronization,and timing}
+\item \textbf{ Describe how wait queues are implemented in linux by providing the following two data structures - struct\_\_wait\_queue\_head and struct wait\_queue and clearly indicating the purpose of various fields in these data structures.\\}
+{\color{red} struct\_\_wait\_queue\_head\\\{\\spinlock\_t lock;\\struct list\_head task\_list\};\\typedef struct\_\_wait\_queue\_head wait\_queue\_head\_t;\\
+protected using lock spin lock so intrupt handler cant acces simaltaniously\\
+task\_list field is the head of the waiting proces list.\\
+struct\_\_wait\_queue\\\{\\unsigned int flags;\\struct task\_struct * task\\ wait\_queue\_func\_t func;\\struct list\_head task\_list\};\\typedef struct\_\_wait\_queue wait\_queue\_t;\\task field stores descriptors of the sleeping pprocess\\flags field indicate kind of sleeping processes\\func field specifies how process should be woken up\\
+task\_list field is the head of the waiting proces list.\\}
+\item \textbf{ What is meant by “thundering herd” problem. Explain how it is tackled.\\}
+{\color{red}multiple process wake up at the same time and race for recourse that can be accesed by onl one of them. kernel lets one process take the resource and uts all athers back to sleep}
+\item \textbf{ What are the two kinds of sleeping processes in wait queue. Why do you require this classification.\\}
+{\color{red}exclusive - nonexclusive processes;\\
+exclusive processes are woken up by kernel selectively since they are waiting for recourse that can be asigned to only one proces at a time\\
+nonexclusive processes are alwas woken up by kernel when event occurs}
+\item \textbf{ Explain process Resource limits in Linux and list the various resource limits specified.\\}
+{\color{red}limits how much of the system recource can process use\\
+RLIMIT\_AS limits adress space\\
+RLIMIT\_CORE limits core dump size\\
+RLIMIT\_CPU limits CPU time\\
+RLIMIT\_DATA limits heap size\\
+RLIMIT\_FSIZE limits file size\\
+RLIMIT\_LOCKS limits number of file locks\\
+RLIMIT\_MEMLOCK limits size of sonswappable memory\\
+RLIMIT\_MSGQUEUE limits POSIX message queue\\
+RMILIT\_NOFILE limits opened file descriptors\\
+RLIMIT\_NPROC limits number of processes\\
+RLIMIT\_RSS limits page frames\\
+RLIMIT\_SIGPENDING limits pending signals\\
+RLIMIT\_STACK limits stack size\\}
+\item \textbf{ State the purpose of the following commands in unix/linux}
+a) ulimit -Ha\\
+{\color{red} set a hard limit}\\
+ b) ulimit -Sa\\
+{\color{red} set a soft limit} 
+\\c) getconf -a\\
+{\color{red} display all configurations= variables for the current system with its values}
+\\ d) getconf PAGE\_SIZE\\
+{\color{red} display default page size}
+\item \textbf{ Describe Process switch or context switch or task switch in linux.\\}
+{\color{red}suspend the current running process in the CPU and resume execution of some other process suspended earlier}
+\item \textbf{ Explain Hardware context in Linux.\\}
+{\color{red}save the data from register to Kernel Mode Stack and process descriptor(TSS) so when process is resumed executed fetch the needed data }
+\item \textbf{ Write short notes on the following :\\}
+a) Task State Segment\\
+{\color{red} where hardware context is being stored}
+ b) Thread field\\
+ {\color{red} it stores hardware context when process is being switched out }
+\item \textbf{ Describe how kernel performs a process switch using schedule() function.}\\
+{\color{red} switch the Page Global Directory to install a  new address space\\
+switch the kernel Mode stack and the hardware context}
+\item \textbf{ Explain three different mechanisms introduced by modern Unix kernels to solve the problem of duplicating address space. Also indicate the system call associated with each one of these mechanisms to create a process.}\\
+{\color{red} Copy on write - fork()\\ allows both parent and child access the same physical page .when iether wnats to write kernel copies it to another page\\
+lightweight - clone()\\
+parent and child share many per-process kernel data structures,paging tables,opened files,\\
+vfork()\\
+shares same memory adress,parent is blocked untill child finishes execution}
+\item \textbf{ State the three system calls used to create a process. Why are these system calls required?}\\
+{\color{red} fork()\\ creates a child process,allows both parent and child access the same physical page \\
+clone()\\
+creates a thread,lightweight,child,parent and child share many per-process kernel data structures,paging tables,opened files,\\vfork()\\creates a child,
+shares same memory adress,parent is blocked untill child finishes execution}
+\item \textbf{ Write the system call used to create a lightweight process in linux.}\\
+{\color{red}clone()}
+\item \textbf{ Write short notes on}\\
+a) Process 0\\
+{\color{red}ancestor of all processes,idle process,swapper process,created during initilization phase} b) Process 1\\{\color{red}kernel thread created by process 0 init(),it invoces execve(),stayes alive untill shut down}
+\item \textbf{ Describe the operations performed by the following functions in linux :\\}
+a) do\_fork()\\{\color{red}handles clone(),fork(),vfork() system calls\\invokes copy\_process() to set up process descriptor and other kernel data structures }
+ b) copy\_process()\\{\color{red}sets up the process descriptor and other kernel data structures neede for childs execution}
+\item \textbf{ What are kernel threads? Explain how kernel threads are created in linux.}\\
+{\color{red}threads run only in kernel mode,kernel\_thread() creates it,process 0 and process1 are them.}
+\item \textbf{ State the purpose of following functions in linux.}
+a) kernel\_thread()\\{\color{red}creates kernel thread}
+ b) copy\_process() \\{\color{red}sets up process descriptor child needs}
+ c) exit() \\{\color{red}releases resources and evicts the process from the system}
+ d) exit\_group()\\{\color{red}terminates fuul thhread group}
+\item \textbf{ Describe how processes are created and terminated/destroyed in Linux.}\\
+{\color{red}created using fork(),clone(),or vfork() and each of these are handeled by do\_fork() function. do\_fork() calls copy\_process to set up descriptors and kernel structures,
+theu are destroyed using exit() or exit\_group()}
+\item \textbf{ What is orphan process? How orphan process is handled in linux to eliminate memory leak?}\\
+{\color{red}when parent terminated before child, all orphan become child of init process and init reaps them using wait()}
+\item \textbf{ What happens if parent process terminates before its children? How this problem is solved to eliminate memory leaks?}\\
+{\color{red}system could be flooded with zombie processes.all orphan become child of init process and init removes zombie proceses by using wait() and reaping its childs}
+\end{enumerate}
+
+\textbf{INTER-PROCESS COMMUNICATION}
+\begin{enumerate}
+\item \textbf{ Explain what is meant by Inter Process Communication (IPC).}\\
+{\color{red}mechanis so that processes can synchronize and exchange data}\\
+\item \textbf{ State and Explain the six basic mechanisms offered by linux systems to allow Inter Process Communication.}\\
+{\color{red}Pipes and FIFOs (named pipes)-
+Best suited to implement producer/consumer interactions among processes. Some
+processes fill the pipe with data while others extract data from the pipe.\\
+Semaphores-
+Represents, as the name implies, the User Mode version of the kernel semaphores\\
+Messages-
+Allow processes to exchange messages (short blocks of data) in an asynchronous way.
+They can be thought of as signals carrying additional information.\\
+Shared memory regions-
+Best suited to implement interaction schemes in which processes must share large
+amounts of data in an efficient way.\\
+Sockets- allowas processes on different computers o exchange data}\\
+\item \textbf{ Explain the following :}\\
+a) Pipes\\
+{\color{red}pipe is a one-way flow of data between processes: all data written by a process to the pipe is
+routed by the kernel to another process, which can thus read it.}\\
+b) FIFOs\\
+{\color{red}is no way to open an already existing pipe. This makes it
+impossible for two arbitrary processes to share the same pipe, unless the pipe was created by a
+common ancestor process. named Pipe solves it since FIFO is similar to device file}\\
+c) Semaphores\\
+{\color{red} counter used to provide contrlled access to shared data structures for multiple processes}\\
+d) Message Queues\\
+{\color{red}messages generated by processes are sent to message queue and stays there until process reads it}\\
+e) Shared Memory\\
+{\color{red}puts some data structures in shared region so multiple processes can access it}\\
+f) Sockets\\
+{\color{red} allowas processes on different computers o exchange data}\\
+\item \textbf{ Explain what is meant by a pipe.}\\
+{\color{red}pipe is a one-way flow of data between processes: all data written by a process to the pipe is
+routed by the kernel to another process, which can thus read it.}\\
+\item \textbf{ Explain the following functions :}\\
+a) pipe()\\
+{\color{red}creates new pipe}\\
+ b) execve() \\
+ {\color{red}system call to execute programm}\\
+c) dup2()\\
+{\color{red}duplicates file descriptors}\\
+ d) popen() \\
+ {\color{red}wrapper function that creates  pipe using pipe()}\\
+e) pclose()\\
+ {\color{red}wrapper function that waits termination of process created by popen() using wait4()}\\
+f) pipe\_read()\\
+{\color{red}reads from pipe}\\
+g) pipe\_write()\\
+{\color{red}writes to pipe}\\
+\item \textbf{ Describe all the actions essentially performed by the command shell when the command statement ls | more is interpreted and executed after invoking the pipe command. Also clearly indicate the actions performed by the two child processes created.}\\
+{\color{red}1.invokes pipe() and it returnes for example descriptors 3 and 4\\
+2.invokes fork() two times\\
+3.invokes close() two times to release descriptors 3 and 4\\
+1st child execuutes ls\\
+1.invokes dup2(4,1) to copy descriptor 4 to descriptor 1\\
+mow pipe write channel is 1\\
+2.invokes close() two times to release descriptors 3 and 4\\
+3.invokes execve() to run the ls programm program writes its output to file descriptor 1 and pipe\\
+2nd child executes more\\
+1.invokes dup2(3,0) now read channel is descriptor 0\\
+2.invokes close() two times to release descriptor 3 and 4\\
+3.invokes execve() to run more programm, it reads input from file descriptor 0 and pipe}\\
+\item \textbf{ Describe the operations performed by the function popen().}\\
+{\color{red}1.creates new pipe using pipe()\\
+2.forkes a new process\\
+a.if option is r duplicates descriptor with descriptor 1 otherwise if w with descriptor 0\\
+b.close the file descriptor\\
+c.invokes execve()\\
+3.if type is r closes descriptor 1 else if w closes descriptor 0\\
+4.returns address of the FILE file pointer refering to openned file descriptor for pipe}\\
+\item \textbf{ One pipe buffer consists of …….. page frame(s)}\\
+{\color{red}a) 1}\\
+ b) 4 \\
+ c) 8\\
+   d) 16\\
+
+\item \textbf{ Each pipe makes use of ……… pipe buffers which greatly enhances the performance of User Mode applications that write large chunks of data in a pipe.}\\
+a) 1\\
+ b) 4\\
+  c) 8 \\
+{\color{red}d) 16}\\
+\item \textbf{ Describe pipefs special filesystem. Indicate where this is located.}\\
+{\color{red}pipefs is the special file system for pipes and it is located at VFS layer}\\
+\item \textbf{ State the three limitations of a pipe.}\\
+{\color{red}1.cannot open existing pipe\\
+2. two processes cannpt share a pipe\\
+3.server and client cannot share a pipe}\\
+\item \textbf{ Explain what is meant by named pipe or FIFO.}\\
+{\color{red}is no way to open an already existing pipe. This makes it
+impossible for two arbitrary processes to share the same pipe, unless the pipe was created by a
+common ancestor process. named Pipe solves it since FIFO is similar to device file}\\
+\item \textbf{ Distinguish between Pipes \& FIFOs.}\\
+{\color{red}FIFO is associated with kernel buffer that temporarily stores data \\FIFOs can be oppened by multiple processes because FIFO filename is in the system directory tree}\\
+\item \textbf{ What are the advantages of FIFO over unnamed pipe?}\\
+{\color{red}FIFO inode appear on system directory tree\\
+it is possible to open it in read/write mode}\\
+\item \textbf{ Explain the operations performed by the following functions :}\\
+a) mknod()\\
+{\color{red}creates FIFO  with parametes pathname and values S\_IFIFO (0x10000) logically ORed with permission bit mask}\\
+ b) mkfifo()\\
+ {\color{red}POSIX function to create FIFO which invokes mknod()}\\
+\item \textbf{ Discuss System V IPC (Inter Process Communication) mechanisms}\\
+{\color{red}synchronise itself with other processes using semaphores\\
+send messages to other processesor recieve messages from them\\
+share a memory area with other processes}\\
+\item \textbf{ List the three kinds of System V IPC resources.}\\
+{\color{red}a semaphore,message queue, shared memory region}\\
+\item \textbf{ Explain the purpose of the following :}\\
+a) IPC key \\
+{\color{red}process may require several IPC recourses of same time so new recourse is identified by 32-bit IPC key,similar to file pathname }\\
+b) IPC Resource identifier
+{\color{red}32 bit IPC recource identifier is similar to file descriptor  assosiated with a opened file; it is assigned to resource y kernel IPC key can be chosen by programmer}\\
+\item \textbf{ Explain the purpose of the following functions :}\\
+a) semget()\\ 
+{\color{red}creates semaphore}\\
+b) msgget()\\ 
+{\color{red}creates message queue}\\
+c) shmget()
+{\color{red}creates shared memory region}\\
+\item \textbf{ Explain the method used to compute IPC resource Identifier by providing the expression used and indicating clearly all the parameters used in the expression to compute the IPC identifier.}\\
+{\color{red}IPC identifier = s $ \times $ M + i\\s to represent slotusage sequanse number\\
+M to represent the upper bound on the number of allocatable resources\\
+i to represent slot index, 0\textless =i \textless M}\\
+\item \textbf{ Explain IPC Semaphores.}\\
+{\color{red}counters used to provide controlled access to shared data structures for multiple processes.if recource is avialable semaphore value is positive otherwise 0}\\
+\item \textbf{ Distinguish between kernel semaphore and IPC semaphore.}\\
+{\color{red}kernel semaphore is only one semaphore and used to protect one file while IPC semaphore is set of semaphorese used to protect severall files at the same time}\\
+\item \textbf{ What are primitive semaphores?}\\
+{\color{red}counter inside the IPC semaphore}\\
+\item \textbf{ Explain the relation between primitive and IPC semaphore}\\
+{\color{red}each IPC semaphore has 250 primative semaphore inside}\\
+\item \textbf{ Number of IPC semaphore resources that can be used by default is ….}\\
+a) 32 \\
+
+b) 64 \\
+
+{\color{red}c) 128 }\\
+d) 256 \\
+\item \textbf{ Number of primitive semaphores available inside a single IPC semaphore resource by default is …..}\\
+a) 30 \\
+
+b) 60 \\
+
+d) 120 \\
+
+{\color{red}
+d) 250 }\\
+\item \textbf{ Describe the fail-safe mechanism used by System V IPC semaphores for situations in which a process dies without being able to undo the operations that it previously issued on a semaphore.}\\
+{\color{red}undoable semaphore operations\\
+when process dies all of its IPC semaphores can revert to the values they woulld have had if the proces never started its operation
+}\\
+\item \textbf{ Explain what is meant by undoable semaphore operations.}\\
+{\color{red}when process dies all of its IPC semaphores can revert to the values they woulld have had if the proces never started its operation}\\
+\item \textbf{ What are per-process list and per-semaphore list? Why are they required in semaphore operations?}\\
+{\color{red}lists allows kernel to handle undo operations\\
+per-process keeps track of all semaphores operated upon by a given process with undoable operations\\
+per-semaphore keeps track ofall processses that are actinng on a given semaphore with undoable operations}\\
+\item \textbf{ Explain what is meant by IPC message queue.}\\
+{\color{red}messages generated by processes are sent to message queue and stays
+there until process reads it}\\
+\item \textbf{ Describe the two functions used by the processes to send and receive messages via the IPC message queue resource.}\\
+{\color{red}msdsnd() is used to send messages\\
+it has parameters\\
+IPC identifier of the destination message queue\\
+size of the message text\\
+the address of a user mode buffer thath containthe message type immediately followed up by the text\\
+msgrcv() is to retrieve message\\
+parameters\\
+IPC identifier of the IPC message queue resource\\
+pointer to a user mode buffer to which message type ande message text should be copied\\
+the size of this buffer\\
+a value t that specifies what message should be retrieved\\
+if the value t is 0 firs message in the queue is returned\\
+if t is positive matshing first queue type message\\
+if t is negative fist message whose type is lowest value less than absolute t}\\
+\item \textbf{ Discuss the following functions clearly explaining the parameters required by each of these functions.}\\
+a) msgsnd()\\
+{\color{red} is used to send messages\\
+it has parameters\\
+IPC identifier of the destination message queue\\
+size of the message text\\
+the address of a user mode buffer thath containthe message type immediately followed up by the text}\\
+ b) msgrcv()\\
+ {\color{red}is to retrieve message\\
+parameters\\
+IPC identifier of the IPC message queue resource\\
+pointer to a user mode buffer to which message type ande message text should be copied\\
+the size of this buffer\\
+a value t that specifies what message should be retrieved\\
+if the value t is 0 firs message in the queue is returned\\
+if t is positive matshing first queue type message\\
+if t is negative fist message whose type is lowest value less than absolute t}\\
+\item \textbf{ In Unix System V,}\\
+a) Number of IPC message queue resources allowed by default is ……
+{\color{red}16}\\
+b) Size of each message in a queue by default is ………
+{\color{red}8192}\\
+c) Maximum total size of the messages in a queue by default is ……………….
+{\color{red}16384}\\
+\item \textbf{ Describe the IPC shared memory resource.}\\
+{\color{red}allows two or more processe to access some common data structures by placing them in a IPC shared memory region}\\
+\item \textbf{ Explain the purpose of the following functions :}\\
+a) shmget()\\
+{\color{red}get the IPC identifier of a shared memory region}\\
+ b) shmat()\\ 
+{\color{red}attaches shared memory region to a process}\\
+ c) shmdt()\\
+{\color{red}deattaches shared memory region from a process}\\
+\item \textbf{ Explain clearly how swapping out pages of IPC shared memory regions are handled by the kernel.}\\
+{\color{red}in order to reclaim a pageof a shared memmory region the kernel writes it to swap area,because memory region should exist even if it is not beeing used by the procces ,demand paging mechanism solves it}\\
+\item \textbf{ Describe the operations performed by the following library functions for POSIX message queues :}\\
+a) mq\_open()\\
+ {\color{red}usese open()syscal open POSIX message queue}\\
+b) mq\_close()\\
+{\color{red}invokes  mq\_unlink() to delete the message queue }\\
+  c) mq\_unlink()\\
+{\color{red}destroys the queue}\\
+   d) mq\_send()\\
+{\color{red} applications sends the message a letter}\\
+d) mq\_timedsend()\\
+{\color{red}maximum time application will spend on sending message}\\
+ e) mq\_receive() \\
+{\color{red}application recieves message}\\
+ f) mq\_timedreceive()\\
+{\color{red}maximum time spend to recieve message}\\
+\item \textbf{ Explain what is meant by a socket.}\\
+{\color{red}an end point of communication between two channels/sytems\\
+sochet is a combination of a IP and port number}\\
+\item \textbf{ Describe socket programming.}\\
+{\color{red}a way of connecting two nodeson a network to communicate with each other}\\
+\item \textbf{ With the help of a neat schematic, describe the client and server model.}\\
+
+\begin{figure}[H]
+ \centering
+  \includegraphics{7.jpg}
+  \label{fig:7}
+\end{figure}
+\item \textbf{ List out the steps involved in establishing a socket on the server side.}\\
+{\color{red}1.socket creation\\
+2.set socket option\\
+3.bind\\
+4.listen\\
+5.accept\\
+6.send/recieve}\\
+\item \textbf{ List out the steps involved in establishing a socket on the client side.}\\
+{\color{red}1.socket creation\\
+2.connect\\
+3.send/recieve }\\
+\item \textbf{ Discuss TCP/IP Protocol suite}\\
+{\color{red}maps to a four layer conceptual model known as DARPA model: APPLICATON\\
+TRANSPORT\\
+INTERNET\\
+NETWORK INTERFACE}\\
+\item \textbf{ Write the specific functions performed by TCP and IP protocols in the internet protocol suite.}\\
+{\color{red}TCP defines how applications cancreate channels of communication acrros network\\it also manages how messages is assembled into smaller packets\\
+IP defines how to address and route each packet}\\
+\item \textbf{ What is an IP address? Distinguish between IPv4 and IPv6 addresses.}\\
+{\color{red}identification and addressing;\\IPv4 has 32 bit and displayed in dotted-decimal while IPv6 has 128 bits and displayed in dotted hex}\\
+\item \textbf{ Explain the following :}\\
+a) Address Domain\\
+{\color{red}Unix domain - unix domain two processes which share a common file system communicat\\
+INTERNET domain- two processes running on any two hosts on the internet communicate}\\
+ b) Address format \\
+ {\color{red}address domain has its own address format, unix domain has format as character string; an entery in the file system\\
+ internet domain has address format as IP address}\\
+c) Port Number\\
+{\color{red}16 bit unsigned integer}\\
+ d) Socket types\\
+{\color{red}stream socket-communication as continuous stream of characters\\datafram socket-reat entire messages at once}\\
+\item \textbf{ What are well-known ports or default TCP port numbers?}\\
+{\color{red}ports reserved for privileged services 0 to 1023}\\
+\item \textbf{ Specify the default Port numbers associated with the following :}\\
+Telnet,\\
+{\color{red}23}\\
+ FTP Data,\\
+ {\color{red}20}\\
+ FTP control,\\
+ {\color{red}21}\\
+ SSH,\\
+ {\color{red}22}\\
+ SMTP,\\
+ {\color{red}25}\\
+ DNS,\\
+ {\color{red}53}\\
+ HTTP,\\
+ {\color{red}80}\\
+ SNMP,\\
+ {\color{red}161}\\
+ HTTPS\\
+ {\color{red}443}\\
+  DHCP server,\\
+ {\color{red}547}\\
+ DHCP client\\
+ {\color{red}546}\\
+
+\item \textbf{ Describe the following functions by providing the complete syntax of the function and parameters required :}\\
+a) Socket\\
+{\color{red}int socket(int domain, int type, int protocol)}\\
+ b) setsockopt\\
+ {\color{red}int setsochopt(int s, int level,int optname, void *optval,socklen\_t *optlen)}\\
+ c) bind\\
+ {\color{red}int bind(int sockfd,const struct sockaddr *addr,socklen\_t addrlen)}\\
+ d) listen \\
+ {\color{red}int listen(int sockfd,int backlog)}\\
+e) accept\\
+{\color{red}int new\_socket=accept(int sockfd,struct sockaddr *addr, socklen\_lent *addrlen)}\\
+f)connect \\
+{\color{red}int connect(int sockfd,const struct socaddr *addr,socklen\_t addrlen)}\\
+g) read \\
+{\color{red}read(sockfd,recvBuff,sizeof(recvBuff)-1)}\\
+h) write \\
+{\color{red}write(sockfd,recvBuff,sizeof(recvBuff)-1)}\\
+i) send \\
+{\color{red}recv(socket\_desc,recvBuff,strlen(recvBuff),0)}\\
+j) recv \\
+{\color{red}recv(socket\_desc,sendBuff,strlen(sendBuff),0)}\\
+\item \textbf{ State the purpose of select() command. Provide the complete syntax of the command clearly specifying the parameters required.}\\
+{\color{red}to monitor multiple file descriptors;\\
+int select(int n,fd\_set *readfds,fd\_set*writefds,fd\_set *exceptfds,struct timeval *timeout)}\\
+
+\end{enumerate}
+
+\textbf{File: on-disk file system}
+\begin{enumerate}
+\item \textbf{ Discuss general characteristics/features of Extended File System Ext2/Ex3/Ex4}\\
+{\color{red}1.File block size: from 1K to 4K\\
+2.selection of inodes for effective use of disk\\
+3.grouping of blocks\\
+4.reduction of file fragmantation\\
+5.faster symbolic links\\
+6. efficient file update to minimize impact of system  crashes\\
+7.support for automatic consistency check on the filesystems status\\
+8.support for immutable files\\
+9.compatability with UNIX \& BSD\\
+10.block fragmantation\\
+11.handling of transparentaly compressed and encrypted files\\
+12.logical deletion\\
+13.journaling}\\
+\item \textbf{ Explain how faster symbolic links are supported in ex2/ex4 file systems.}\\
+{\color{red}it represents a short pathname 60 characterss and it stores it in inode thus can be translated without reading a data block}\\
+\item \textbf{ Explain what is meant by consistency check of the filesystem. Indicate the command used in linux to perform consistency check of the filesystem.}\\
+{\color{red}e2fsck externall program checks can de run at boot time or when predifined number of mount is not matching with current counter}\\
+\item \textbf{ Explain what is meant by an immutable file. Write the command in linux to make a file immutable.}\\
+{\color{red}files cannot be modified,deleted,or renamed\\
+\$chattr +i filename}\\
+\item \textbf{ Explain what is meant by append-only file. Write the command in linux to make a file append-only.}\\
+{\color{red}data can be added only at the end of the file\\
+\$chattr +a filename}\\
+\item \textbf{ Explain the purpose of the following commands :}
+a) lsattr\\
+{\color{red}lists attributes of the file}\\
+ b) chattr \\
+ {\color{red}sets attributes}\\
+c) ls -i\\
+{\color{red}for esch file print inode number}\\
+ d) extundelete
+{\color{red}recoover deleted files}\\
+\item \textbf{ State what happens when the following commands are executed :}\\
+a) chattr +i /etc/passwd
+\\{\color{red}passwd becomes immutable file cannot be modified,deleted or renamed}\\
+b) chattr +a file1
+\\{\color{red}file1 is append only}\\
+c) lsattr /etc/passwd
+\\{\color{red}lists attributes for passwd}\\
+d) chattr –R +i dir1
+\\{\color{red}Recursively change attributes of dir1 and make them immutable}\\
+e) extundelete –Restore-all
+\\{\color{red}recover all deleted data from partition}\\
+\item \textbf{ Explain the purpose of the following features in linux :}\\
+a) Undelete \\
+{\color{red}An undelete option allows users to easily recover, if needed, the
+contents of a previously removed file.
+}\\
+b) Journaling\\
+{\color{red}Journaling avoids the time-consuming check that is automatically
+performed on a filesystem when it is abruptly unmounted for instance,
+as a consequence of a system crash
+}\\
+\item \textbf{ With the help of block diagram, describe how EX2 disk partition is divided into block Groups and also draw the layout of a block group showing all the fields.}\\
+
+\begin{figure}[H]
+ \centering
+  \includegraphics{8.jpg}
+  \label{fig:8}
+\end{figure}
+\item \textbf{ With the help of block diagram, describe how EX4 disk partition is divided into block Groups and also draw the layout of a block group showing all the fields.}\\
+
+\begin{figure}[H]
+ \centering
+  \includegraphics{9.jpg}
+  \label{fig:9}
+\end{figure}
+\item \textbf{ State the purpose of “Reserve GDT Block” in the Block group of Ext4 filesystem.}\\
+{\color{red}when the filesystem is freshly formatted, mkfs will allocate "reserve GDT block" space
+after the block group descriptors and before the start of the block bitmaps to allow for future
+expansion of the filesystem.
+}\\
+\item \textbf{ Size of the Boot block in Ext4 partition is ………….. bytes.}\\
+{\color{red}2\^27}\\
+\item \textbf{ State the purpose of sparse\_super feature flag in Ext4 file system.}\\
+{\color{red}In Ext4, If the sparse\_super feature flag is set,
+redundant copies of the superblock and group
+descriptors are kept only in the groups whose
+group number is either 0 or a power of 3, 5, or 7.
+}\\
+\item \textbf{ Distinguish between Ext2 and Ext4 filesystems.}\\
+{\color{red}Ext2 has fetures \\ 1.File block size: from 1K to 4K\\
+2.selection of inodes for effective use of disk\\
+3.grouping of blocks\\
+4.reduction of file fragmantation\\
+5.faster symbolic links\\
+6. efficient file update to minimize impact of system  crashes\\
+7.support for automatic consistency check on the filesystems status\\
+8.support for immutable files\\
+9.compatability with UNIX \& BSD\\when Ext4 has additional features like \\10.block fragmantation\\
+11.handling of transparentaly compressed and encrypted files\\
+12.logical deletion\\
+13.journaling}\\
+\item \textbf{ Draw the layout of a block group in Ex2/Ex4 partition showing all the fields and providing the purpose of each of the field and number of blocks required by each of the field.}\\
+\begin{figure}[H]
+ \centering
+  \includegraphics{9.jpg}
+  \label{fig:10}
+\end{figure}
+\item \textbf{ Describe the following :}\\
+a) Super block\\
+{\color{red}The superblock records various information
+about the enclosing filesystem, such as block
+counts, inode counts, supported features,
+maintenance information, and more
+}\\
+ b) Block group descriptor\\
+ {\color{red}stores information about group blocks}\\
+ c) datablock bitmap\\
+ {\color{red}is a bitmat to show which datablock is used and which are free}\\
+d) inode bitmap \\
+{\color{red}to show which inode is used and which are free}\\
+e) inode\\
+{\color{red}The inode is a data structure in a Unix-style file
+system which describes a filesystem object such as a
+file or a directory
+}\\
+ f) inode table\\
+ {\color{red}The inode table consists of a series of consecutive blocks, each
+of which contains a predefined number of inodes.
+}\\
+\item \textbf{ All fields in Ext4 are written to disk in ………….…….. byte order. However, all fields in jbd2 (the journal) are written to disk in ………………… byte order.}\\
+{\color{red}litlle-endian\\
+big-endian}\\
+\item \textbf{ State the reason to keep a copy of the superblock and a copy of the group of block group descriptors in each block group?}\\
+{\color{red}if data corrupt accures in first block redundant copies will be used instead}\\
+\item \textbf{ Consider a 32-GB Ext2 partition with a 4-KB block size. Determine the approximate number of blockgroups in that partition.}\\
+{\color{red}256}\\
+\item \textbf{ Consider a 512-GB Ext2 partition with a 4-KB block size. Determine the approximate number of blockgroups in that partition.}\\
+{\color{red}4096}\\
+\item \textbf{ Given the following parameters pertaining to ext2 disk file system :}\\
+‘m’ - number of Blockgroups in a given disk partition\\
+‘n’ - number of disk blocks in each of the blockgroups.\\
+‘b’ - size of a disk block in bytes\\
+‘p’ - number of inodes in a blockgroup\\
+Compute the following :\\
+a) Write a general expression for ‘n’ i.e., to compute the number of disk blocks required to store one blockgroup, i.e. compute the size of a blockgroup in terms of disk blocks required.
+\\{\color{red}n=8$\times$b, s/(8$\times$b) s-disk partiition size}\\
+b) If b=disk block size = 4096 bytes (4KB), p=8192 inodes and m = 4K Blockgroups then determine the following\\
+(i) Compute\\
+a) size of superblock,
+\\{\color{red}1 block}\\
+b) size of blockgroup descriptors,
+\\{\color{red}4k blocks}\\
+c) size of data block bitmap,
+\\{\color{red}1 block}\\
+d) size of inode bitmap,
+\\{\color{red}1 block}\\
+e) size of inode and size of inode table,
+\\{\color{red}inode size 128byte - in 4k block 32 inodes so inode table  8192/32=256 blocks}\\
+f) number of data blocks and size of data blocks
+\\{\color{red}8192 - 32MB}\\
+(ii) Size of one blockgroup, i.e., n
+\\{\color{red}32768$\times$4KB=128 MB}\\
+(iii) Size of the disk partition.
+\\{\color{red}128MB$\times$4K=512 GB}\\
+\item \textbf{ If disk block size = 1KB, \# of inodes = 8192 inodes and 8K Blockgroups then determine the following}\\
+a) size of superblock,
+\\{\color{red}1 block}\\
+b) size of blockgroup descriptors,
+\\{\color{red}8k blocks}\\
+c) size of data block bitmap,
+\\{\color{red}1 block}\\
+d) size of inode bitmap,
+\\{\color{red}1 block}\\
+e) size of inode and size of inode table,
+\\{\color{red}1kb - 8 inodes -8192/8 = 1024 blocks }\\
+f) number of data blocks and size of data blocks
+\\{\color{red}8192- 8MB}\\
+g) Size of one blockgroup
+\\{\color{red}8192$\times$1KB=8MB}\\
+h) Size of the disk partition.
+\\{\color{red}8MB$\times$8K = 64 GB}\\
+\item \textbf{ If disk block size = 2 KB, \# of inodes = 8192 inodes and 16K Blockgroups then determine the following}\\
+a) size of superblock,
+\\{\color{red}1 block - 2KB}\\
+b) size of blockgroup descriptors,
+\\{\color{red}16k blocks}\\
+c) size of data block bitmap,
+\\{\color{red}1 block}\\
+d) size of inode bitmap,
+\\{\color{red}1 block}\\
+e) size of inode and size of inode table,
+\\{\color{red}-2kb 16 inodes- 8192/16= 512 blocks}\\
+f) number of data blocks and size of data blocks
+\\{\color{red}8192- 8192$\times$2KB=16MB}\\
+g) Size of one blockgroup
+\\{\color{red}8$\times$2KB=16384- 16384$\times$2KB=32MB}\\
+h) Size of the disk partition.
+\\{\color{red}32MB$\times$16K=512BG}\\
+\item \textbf{ If disk block size = 8 KB, \# of inodes = 8192 inodes and 8K Blockgroups then determine the following}\\
+a) size of superblock,
+\\{\color{red}1 block}\\
+b) size of blockgroup descriptors,
+\\{\color{red}8k blocks}\\
+c) size of data block bitmap,
+\\{\color{red}1 block}\\
+d) size of inode bitmap,
+\\{\color{red}1 block}\\
+e) size of inode and size of inode table,
+\\{\color{red}8KB- 64 -8192/64-128 blocks}\\
+f) number of data blocks and size of data blocks
+\\{\color{red}8192- 8192$\times$8K=16MB}\\
+g) Size of one blockgroup
+\\{\color{red}8K$\times$8=16K - 16k$\times$8k=128MB}\\
+h) Size of the disk partition.
+\\{\color{red}128MB$\times$8K=1TB}\\
+\item \textbf{ If disk block size = 16KB, \# of inodes = 8192 inodes and 16K Blockgroups then determine the following}\\
+a) size of superblock,
+\\{\color{red}1 block}\\
+b) size of blockgroup descriptors,
+\\{\color{red}16K blocks}\\
+c) size of data block bitmap,
+\\{\color{red}1 block}\\
+d) size of inode bitmap,
+\\{\color{red}1 block}\\
+e) size of inode and size of inode table,
+\\{\color{red}16K- 128 inodes -8192/128=64 blocks }\\
+f) number of data blocks and size of data blocks
+\\{\color{red}8192- 8K$\times$16K=128MB}\\
+g) Size of one blockgroup
+\\{\color{red}16KB$\times$8=128MB- 128MB$\times$16K=2TB}\\
+h) Size of the disk partition.
+\\{\color{red}2TB $\times$ 16K= 32 PB}\\
+\item \textbf{ How many block groups are there in a given 512 GB Ext2 partition with a 4-KB block size and 8192 inodes in each block group.}\\
+{\color{red}256}\\
+\item \textbf{ Explain what is meant by file extent.}\\
+{\color{red}Extents are contiguous blocks on the hard disk that are used to keep files close together and prevent fragmentation.}\\
+\item \textbf{ Write the various fields in a blockgroup descriptor data structure ext2\_group\_desc and describe the information provided by each of the field in the blockgroup descriptor data structure.}\\
+{\color{red}
+bg\_block\_bitmap;		 Blocks bitmap block 
+\\bg\_inode\_bitmap;		 Inodes bitmap block 
+\\bg\_inode\_table;		 Inodes table block 
+\\bg\_free\_blocks\_count;	 Free blocks count 
+\\bg\_free\_inodes\_count;	 Free inodes count 
+\\bg\_used\_dirs\_count;	 Directories count 
+\\bg\_pad;					alignment to word
+\\bg\_reserved; NULLS to pad out 24 bytes}\\
+\item \textbf{ Write the various fields in inode (file descriptor) data structure ext2\_inode and describe the information provided by each of the field in the inode data structure.}\\
+{\color{red}
+		i\_mode;		 File mode 
+	\\	i\_uid;		 Low 16 bits of Owner Uid 
+	\\	i\_size;		 Size in bytes 
+	\\	i\_atime;	 Access time 
+	\\	i\_ctime;	 Creation time 
+	\\	i\_mtime;	 Modification time 
+	\\	i\_dtime;	 Deletion Time 
+	\\	i\_gid;		 Low 16 bits of Group Id 
+	\\	i\_links\_count;	 Links count 
+	\\	i\_blocks;	 Blocks count 
+	\\	i\_flags;	 File flags 
+	\\	i\_block[EXT2\_N\_BLOCKS];  Pointers to blocks 
+	\\	i\_generation;	  File version (for NFS) 
+	\\	i\_file\_acl;	  File ACL 
+	\\	i\_dir\_acl;	  Directory ACL 
+	\\	i\_faddr;	  Fragment address }\\
+\item \textbf{ Explain the purpose of following fields in an inode data structure :}\\
+a) i\_mode,\\
+ {\color{red}File type and access rights}\\
+b) i\_uid, \\
+{\color{red}Owner identifier}\\
+ c) i\_size, \\
+{\color{red}File length in bytes}\\
+ d) i\_links\_count,\\
+{\color{red}Hard links counter}\\
+e) i\_blocks, \\
+{\color{red}Number of data blocks of the file}\\
+f) i\_block[15], \\
+{\color{red}Pointers to data blocks}\\
+g) i\_file\_acl, \\
+{\color{red}File access control list}\\
+h) i\_dir\_acl, \\
+{\color{red}Directory access control list}\\
+i) i\_atime,\\
+{\color{red}Time of last file access}\\
+j) i\_ctime, \\
+{\color{red}Time that inode last changed}\\
+k) i\_mtime, \\
+{\color{red}- Time that file contents last changed}\\
+l) i\_dtime, \\
+{\color{red}Time of file deletion}\\
+m) i\_gid\\
+{\color{red}User group identifier}\\
+\item \textbf{ What is Access Control List in Ext2/Ex4 FileSystem?}\\
+{\color{red}Access control lists were proposed a long time ago to improve the
+file protection mechanism in Unix filesystems.
+}\\
+\item \textbf{ Write the linux command to create access control list for individual users or groups for a given file.}\\
+{\color{red}\$setfacl -m "u:user:permissions" /path/to/file
+}\\
+\item \textbf{ Explain the following Unix commands by giving the correct syntax and taking some examples}\\
+a) setfacl\\
+{\color{red}sets up access control}\\
+ b) getfacl
+\\{\color{red}shows acces control}\\
+\item \textbf{ State the reason for including Extended attributes for Inode Objects? }\\
+{\color{red}inode length to 256 would be
+quite wasteful, besides introducing compatibility problems
+between Ext2 filesystems that use different inode lengths.
+ Extended attributes have been introduced to overcome the
+above limitation.
+}\\
+\item \textbf{ Explain how i\_file\_acl field of the inode is used to create extended attributes of an inode.}\\
+{\color{red}The i\_file\_acl field of an inode points to the block
+containing the extended attributes.
+}\\
+\item \textbf{ Describe the layout of an Ex2 extended attributes structure inside a block with the help of a diagram.}\\
+\begin{figure}[H]
+ \centering
+  \includegraphics{10.jpg}
+  \label{fig:11}
+\end{figure}
+\item \textbf{ What is the size of each inode in the inode table? Describe the approach used by Ext4 to increase the size of each inode.}\\
+{\color{red}128 bytes}\\
+\item \textbf{ What is the maximum size of a file as limited by i\_size field of an inode? Describe the approach used by Ext4 to increase the file size considering 64-bit architecture.}\\
+{\color{red}answer}\\
+\item \textbf{ Given 32-GB Ext2 partition with a 4-KB block size. Assume that all the inodes have the same size: 128 bytes. Data block bitmap and inode bitmap take one block each. Determine the number of blocks occupied by the inode table and size of the inode table.}\\
+{\color{red}inode size 128byte - in 4k block 32 inodes so inode table  8192/32=256 blocks}\\
+\item \textbf{ What are the different file types recognized by Ext2 disk file system?}\\
+{\color{red}0 unknown\\1 regular file\\2 directory\\3 character device\\
+4 block device\\5 named pipe\\6 socket\\7 symbolic link}\\
+\item \textbf{ Explain the following file types:}\\
+a)Regular file (Type 1) \\
+{\color{red} Regular file needs data blocks only when it starts to have data. When first created, a regular file is empty and needs no data
+blocks; it can also be emptied by the truncate( ) or open( ) system
+calls.
+ Both situations are common; for instance, when you issue a shell
+command that includes the string >filename, the shell creates an
+empty file or truncates an existing one.
+}\\
+b)Directory (Type 2) \\
+{\color{red}Directory
+ Ext2 implements directories as a special kind of file whose data
+blocks store filenames together with the corresponding inode
+numbers.
+ In particular, such data blocks contain structures of type
+ext2\_dir\_entry\_2.
+}\\
+c)Character device (Type 3)\\
+{\color{red}ascki devices such as keyboard and display}\\
+ d)Block device (Type 4)
+\\{\color{red}Hard disks}\\
+e)Named pipe (Type 5)\\
+{\color{red}FIFO files multiple processes open it to communicate with each other}\\
+ f)Socket (Type 6)
+\\{\color{red}file that lets processes share data via network}\\
+g)Symbolic link (Type 7)
+\\{\color{red}) Symbolic link
+ If the pathname of a symbolic link has up to 60 characters,
+it is stored in the i\_block field of the inode, which consists
+of an array of 15 4-byte integers; no data block is therefore
+required}\\
+\item \textbf{ Indicate the types of files which require no data blocks on the disk.}\\
+{\color{red}Device file, pipe, and socket }\\
+\item \textbf{ Explain why no data block is required on the disk if symbolic link has upto 60 characters.}\\
+{\color{red}Because all the necessary information is stored in the inode. }\\
+\item \textbf{ Describe the two steps used in general to create a filesystem on a disk.}\\
+{\color{red}The first step is to format it so that the disk driver can read and write blocks on it\\The second step involves creating a filesystem, which means setting up the structures}\\
+\item \textbf{ Write the command used in linux to create a filesystem on a disk. Indicate the correct syntax of the command by giving an example.}\\
+{\color{red}mkfs [-V] [-t fstype] [fs-options] filesys [blocks] or mke2fs}
+\item \textbf{ Consider the Ex2 Directory entry structure as shown in the table below :}\\
+\begin{figure}[H]
+ \centering
+  \includegraphics{11.jpg}
+  \label{fig:12}
+\end{figure}
+a) Identify Regular files, Directories, character devices, block devices, named pipes, sockets and symbolic links\\
+{\color{red}answer}\\
+b) Identify the deleted files\\
+{\color{red}answer}\\
+c) List the file names requiring $\backslash$ 0 padding and also specify how many $\backslash$ 0 paddings required.\\
+{\color{red}answer}\\
+d) Write the specific values in address, rec\_len and name\_len fields.\\
+{\color{red}answer}\\
+\item \textbf{ Indicate which of the following types of fields in the Ext2 data structures are :
+Always cached or stored in Dynamic memory or Never cached :}\\
+Super block ………………..……..\\{\color{red}answer}\\
+Group Descriptor ……………………….\\{\color{red}answer}\\
+Block bitmap ……………………….\\{\color{red}answer}\\
+Inode bitmap ……………………….\\{\color{red}answer}\\
+Inode ……………………….\\{\color{red}answer}\\
+Data block ……………………….\\{\color{red}answer}\\
+Free inode ……………………….\\{\color{red}answer}\\
+Free block ……………………….\\{\color{red}answer}\\
+\item \textbf{ List out all the actions performed by make2fs program.}\\
+{\color{red}answer}\\
+\item \textbf{ State the purpose of a lost+found directory.}\\
+{\color{red}answer}\\
+\item \textbf{ Consider an Ext2 1.44 MB floppy disk which is initialized by make2fs with the default options - Block size: 1,024 bytes, Number of allocated inodes : 1 inode for each 8,192 bytes, Percentage of reserved blocks: 5 percent.
+Compute the following:}\\
+a) Total number of blocks in the floppy disk considering its size.\\
+{\color{red}answer}\\
+b) Total number of reserved blocks\\
+{\color{red}answer}\\
+c) Number of Block group descriptors\\
+{\color{red}answer}\\
+d) Number of inodes in the inode table\\
+{\color{red}answer}\\
+e) Size of inode table in terms of blocks\\
+{\color{red}answer}\\
+\item \textbf{ State the purpose of the following command :}\\
+\$ dd if=/dev/sda1 of=/dev/sda6\\
+{\color{red}answer}\\
+\item \textbf{ State the operation performed by the following command :}\\
+\$ dd if=/dev/fd0 bs=1k count=1440 | od -tx1 -Ax > /tmp/dump\_hex\\
+{\color{red}answer}\\
+\item \textbf{ State the two main problems that must be addressed when the Ext2 filesystem manages the disk space by allocating and deallocating inodes and data blocks.}\\
+{\color{red}answer}\\
+\item \textbf{ Describe the two steps used to derive the logical block number of corresponding data block from an offset f inside a file .}\\
+{\color{red}answer}\\
+\item \textbf{ Assume a data block size of 4KB, find the file block number for the given file offset 14320. Also specify the corresponding logical block number.}\\
+{\color{red}answer}\\
+\item \textbf{ Assume a data block size of 1KB, find the file block number for the given file offset 14320. Also specify the corresponding logical block number.}\\
+{\color{red}answer}\\
+\item \textbf{ Assume a data block size of 4KB, find the file block number for the given file offset 348320. Also specify the corresponding logical block number.}\\
+{\color{red}answer}\\
+\item \textbf{ Assume a data block size of 1KB, find the file block number for the given file offset 348320. Also specify the corresponding logical block number.}\\
+{\color{red}answer}\\
+\item \textbf{ Assume a data block size of 4KB, find the file block number for the given file offset 6782341. Also specify the corresponding logical block number.}\\
+{\color{red}answer}\\
+\item \textbf{ Explain with the help of a schematic, how Data Block Addressing is implemented in Ext2 filesystem.}\\
+{\color{red}answer}\\
+\item \textbf{ Describe clearly how i\_block array field in the disk inode is used to address the disk data blocks pertaining to a file.}\\
+{\color{red}answer}\\
+\item \textbf{ Determine how many disk accesses are required to access a file data block in}\\
+a) one of the first 12 components of the i\_block array.\\
+{\color{red}answer}\\
+b) 13th component of the i\_block array.\\
+{\color{red}answer}\\
+c) 14th component of the i\_block array\\
+{\color{red}answer}\\
+d) 15th component of the i\_block array.\\
+{\color{red}answer}\\
+\item \textbf{ With the help of a schematic, explain the following with respect to Data Block addressing considering a block size of 4KB:}\\
+a)\\ (i) What do the first 12 components of the i\_block array i.e., i\_block[0] to i\_block[11] contain?\\
+(ii) What should be the maximum size of the file that can be addressed by these 12 components?\\
+b)\\ (i) What does the 13th component of i\_block array, i.e., i\_block[12] contain? How many levels of indirect addressing is used?\\
+(ii) How many data blocks pertaining to a file can be addressed by this component? Also specify the starting and ending numbers (indices) of these data block pointers. Explain with the help of a schematic.\\
+(iii) What should be the maximum size of the file that can be addressed considering only 13th component of the array.\\
+(iv) What should be the maximum size of the file that can be addressed by considering first 13 components of the i\_block array?\\
+c)\\ (i) What does the 14th component of i\_block array, i.e., i\_block[13] contain? How many levels of indirect addressing is used?\\
+(ii) How many data blocks pertaining to a file can be addressed by this component Also specify the starting and ending numbers (indices) of these data block pointers. Explain with the help of a schematic.\\
+(iii) What should be the maximum size of the file that can be addressed considering only 14th component of the array.\\
+(iv) What should be the maximum size of the file that can be addressed by considering first 14 components of the i\_block array?\\
+d)\\ (i) What does the 15th component of i\_block array, i.e., i\_block[14] contain? How many levels of indirect addressing is used?\\
+(ii) How many data blocks pertaining to a file can be addressed by this component. Also specify the starting and ending numbers (indices) of these data block pointers. Explain with the help of a schematic.\\
+(iii) What should be the maximum size of the file that can be addressed by only 15th component of the array.\\
+(iv) What should be the maximum size of the file that can be addressed by considering first 15 components of the i\_block array?\\
+e) Determine the total amount of disk blocks required to store all the 15 components of the i\_block array i.e.,all direct block pointers and their all levels of indirect block pointers (second order array, third order array, fourth order array, etc).\\
+f) Determine Maximum amount of disk blocks required to store all the block pointers(as computed in e)) and all file data blocks.\\
+\item \textbf{ Repeat all the parts of Q. 59) considering a block size of 1KB.}\\
+{\color{red}answer}\\
+\item \textbf{ Repeat all the parts of Q. 59) considering a block size of 2KB.}\\
+{\color{red}answer}\\
+\item \textbf{ Repeat all the parts of Q. 59) considering a block size of 8KB.}\\
+{\color{red}answer}\\
+\item \textbf{ Repeat all the parts of Q. 59) considering a block size of 64KB.}\\
+{\color{red}answer}\\
+\item \textbf{ Specify the File size upper limits for data block addressing in the following table :}\\
+\begin{tabular}{c c c c c}
+\\ Block Size & Direct & 1-Indirect & 2-indirect & 3-indirect\\
+1KB  & {\color{red}answer} & {\color{red}answer} & {\color{red}answer} & {\color{red}answer}\\
+2KB  & {\color{red}answer} & {\color{red}answer} & {\color{red}answer} & {\color{red}answer}\\
+4KB  & {\color{red}answer} & {\color{red}answer} & {\color{red}answer} & {\color{red}answer}\\
+8KB  & {\color{red}answer} & {\color{red}answer} & {\color{red}answer} & {\color{red}answer}\\
+16KB  & {\color{red}answer} & {\color{red}answer} & {\color{red}answer} & {\color{red}answer}\\
+\end{tabular}
+\item \textbf{ Explain what is meant by a file hole. Give an example.}\\
+{\color{red}answer}\\
+\item \textbf{ Write the file size and total number of blocks assigned to a file hole when the following commands are executed. Also show the i\_block array and file /tmp/hole data block contents.}\\
+a) \$ echo -n "X" | dd of=/tmp/hole bs=1024 seek=6\\
+{\color{red}answer}\\
+b) \$ echo -n "X" | dd of=/tmp/hole bs=4096 seek=6\\
+{\color{red}answer}\\
+c) \$ echo "HELLO" | dd of=/tmp/hole bs=1024 seek=10\\
+{\color{red}answer}\\
+d) \$ echo "HELLO" | dd of=/tmp/hole bs=4096 seek=10\\
+{\color{red}answer}\\
+\item \textbf{ State the purpose of the following commands :}\\
+\$ mke2fs -t ext4 -b 4096 /dev/sda1\\
+{\color{red}answer}\\
+\$fsck\\
+{\color{red}answer}\\
+\item \textbf{ State the purpose of the following commands :}\\
+\$ mount -t ext4 /dev/fd0 /floppy\\
+{\color{red}answer}\\
+\$mount -t ext4 -o data=writeback /dev/sda2 /jdisk\\
+{\color{red}answer}\\
+\item \textbf{ State the purpose of the following commands :}\\
+\$setfacl -m “u:user\_name:rwx” file1\\
+{\color{red}answer}\\
+\$setfacl -m “g:group\_name:rwx” file1\\
+{\color{red}answer}\\
+\$getfacl file1\\
+{\color{red}answer}\\
+\item \textbf{ Write a linux command to display only the contents of the superblock of ext4 filesystem stored on the disk partition \/dev\/sda1.}\\
+{\color{red}answer}\\
+\item \textbf{ Write a linux command to display only the contents of the block group descriptors of ext4 filesystem stored on the disk partition \/dev\/sda1.}\\
+{\color{red}answer}\\
+\item \textbf{ State what happens when the following linux commands are executed. Clearly write the outputs obtained.}\\
+a) \$ dumpe2fs -h \/dev\/sda1\\
+{\color{red}answer}\\
+b) \$ dumpe2fs -g \/dev\/sda1\\
+{\color{red}answer}\\
+\item \textbf{ State what happens when the following linux commands are executed. Clearly write the outputs obtained.}\\
+a) \$tune2fs –l \/dev\/sda1\\
+{\color{red}answer}\\
+b) \$tune2fs -l \/dev\/sda1 | grep “Default mount options”
+{\color{red}answer}\\
+c) \$tune2fs -o acl \/dev\/sda1\\
+{\color{red}answer}\\
+\item \textbf{ State what happens when the following linux commands are executed. Clearly write the outputs obtained.}\\
+a) \$ lsblk -O\\
+{\color{red}answer}\\
+b) \$ fdisk –l\\
+{\color{red}answer}\\
+\item \textbf{ State what happens when the following linux commands are executed. Clearly write the outputs obtained.}\\
+a) \$ls –ia\\
+{\color{red}answer}\\
+b) \$lscpu\\
+{\color{red}answer}\\
+c) \$lsipc\\
+{\color{red}answer}\\
+\item \textbf{ Define Journaling and explain why is it required.}\\
+{\color{red}answer}\\
+\item \textbf{ Explain the idea behind Ext3\/4 Journaling to perform each high-level change to the filesystem.}\\
+{\color{red}answer}\\
+\item \textbf{ Describe how journaling is used to recover from system crashes.}\\
+{\color{red}answer}\\
+\item \textbf{ Explain the two kinds of blocks in filesystem that need to be logged to the Journal.}\\
+{\color{red}answer}\\
+\item \textbf{ How does the kernel check whether the filesystem was unmounted properly previously or not?}\\
+{\color{red}answer}\\
+\item \textbf{ State the purpose of s\_mount\_state field of the superblock on disk.}\\
+{\color{red}answer}\\
+\item \textbf{ Explain the three different Journaling modes provided by Ext3\/Ext4. State the merits and demerits of each of these modes.}\\
+{\color{red}answer}\\
+\item \textbf{ Explain the following Journaling modes indicating clearly their advantages and disadvantages.}\\
+a) Journal\\
+{\color{red}answer}\\
+ b) ordered\\
+ {\color{red}answer}\\
+ c) writeback\\
+{\color{red}answer}\\
+\item \textbf{ Write the linux command to mount an ext3 filesystem stored in the \/dev\/sda2 partition on the \/jdisk mount point with the \"writeback\" mode}\\
+{\color{red}answer}\\
+\item \textbf{ The Ext3 journal is usually stored in a hidden file named ……………located in the root directory of the filesystem.}\\
+{\color{red}answer}\\
+\end{enumerate}
+
+
+\textbf{File: on-memory file system \& File system calls
+(CHAPTER 12)}
+\begin{enumerate}
+\item \textbf{  Discuss Virtual File System in Linux.}\\
+{\color{red}answer}\\
+\item \textbf{  What is the role of the Virtual Filesystem?}\\
+{\color{red}answer}\\
+\item \textbf{  State the three main classes of File Systems supported by Linux VFS.}\\
+{\color{red}answer}\\
+\item \textbf{  What are Disk-based filesystems? Give some examples}\\
+{\color{red}answer}\\
+\item \textbf{  What is meant Network filesystems? Give some examples.}\\
+{\color{red}answer}\\
+\item \textbf{  What are Special filesystems? Give some examples.}\\
+{\color{red}answer}\\
+\item \textbf{  Categorize the following file systems into disk-based, Network and Special file system classes.}\\
+UFS …………………………\\{\color{red}answer}\\
+CIFS …………………………\\{\color{red}answer}\\
+/proc …………………………\\{\color{red}answer}\\
+NCP …………………………\\{\color{red}answer}\\
+Reiser FS …………………………\\{\color{red}answer}\\
+NTFS …………………………\\{\color{red}answer}\\
+Pipe …………………………\\{\color{red}answer}\\
+UDF …………………………\\{\color{red}answer}\\
+Coda …………………………\\{\color{red}answer}\\
+HFS …………………………\\{\color{red}answer}\\
+NFS …………………………\\{\color{red}answer}\\
+ADFS …………………………\\{\color{red}answer}\\
+AFS …………………………\\{\color{red}answer}\\
+AFFS …………………………\\{\color{red}answer}\\
+XFS …………………………\\{\color{red}answer}\\
+JFS …………………………\\{\color{red}answer}\\
+HPFS …………………………\\{\color{red}answer}\\
+\item \textbf{  Describe the Common File Model used in VFS.}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the object types used in Common File Model of linux VFS.}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the following object types used in Common File Model of linux VFS}\\
+a) Superblock object\\{\color{red}answer}\\
+b) Inode object\\{\color{red}answer}\\
+c) File Object\\{\color{red}answer}\\
+d) Dentry object\\{\color{red}answer}\\
+\item \textbf{  With the help of a schematic, describe the interaction between processes and VFS objects by considering a simple example of three processes opening the same file, two of them using the same hard link.}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the purpose of Superblock object.}\\
+{\color{red}answer}\\
+\item \textbf{  What information is stored in Inode Object?}\\
+{\color{red}answer}\\
+\item \textbf{  What is a File Object?}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the purpose of dentry object.}\\
+{\color{red}answer}\\
+\item \textbf{  How many dentry objects are created by the kernel when looking up the pathname /usr/tmp/test. List the dentry objects created.}\\
+{\color{red}answer}\\
+\item \textbf{  Describe the four states of a dentry object.}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the following four states of a dentry object :}\\
+a) Free\\{\color{red}answer}\\
+ b) Unused\\{\color{red}answer}\\
+  c) In Use\\{\color{red}answer}\\
+ d) Negative\\{\color{red}answer}\\
+\item \textbf{  Describe the two kinds of data structures used by linux in dentry cache to maximize efficiency in handling dentries.}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the approach used by linux to manage unused and negative dentries in dentry cache.}\\
+{\color{red}answer}\\
+\item \textbf{  State the purpose of the following fields in a process descriptor :}\\
+{\color{red}answer}\\
+a) fs\_struct fs \\{\color{red}answer}\\
+b) files\_struct files \\{\color{red}answer}\\
+\item \textbf{  A process cannot use more than ………….. file descriptors and kernel enforces a dynamic bound on the maximum number of file descriptors in a process to …………}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the need for a special file system.}\\
+{\color{red}answer}\\
+\item \textbf{  What are the two numbers associated with a block device. State the purpose of each of these numbers.}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the need for File System Registration. Describe the various fields in the filesystem registration data structure file-system\_type object.}\\
+{\color{red}answer}\\
+\item \textbf{  Define mount point of a filesystem. Explain the terms fixed, any and none with respect to a mount point.}\\
+{\color{red}answer}\\
+\item \textbf{  Write a command to mount a floppy device /dev/fp0 on a temporary directory /floppy.}\\
+{\color{red}answer}\\
+\item \textbf{  Define namespace of a process.}\\
+{\color{red}answer}\\
+\item \textbf{  State whether the following statement is TRUE or FALSE.}\\
+{\color{red}answer}\\
+\item \textbf{ "In most traditional Unix-like kernels, each filesystem can be mounted only once. However, in Linux - it is possible to mount the same filesystem several times.” ………..}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the mounting and unmounting file system operations in linux.}\\
+{\color{red}answer}\\
+\item \textbf{  Write notes on}\\
+a) Mounting Generic filesystems\\{\color{red}answer}\\
+b) Mounting Rooted Filesystem\\{\color{red}answer}\\
+c) Unmounting a Filesystem\\{\color{red}answer}\\
+\item \textbf{  Why does the kernel bother to mount the rootfs filesystem before the real one?}\\
+{\color{red}answer}\\
+\item \textbf{  State the need for File Locking.}\\
+{\color{red}answer}\\
+\item \textbf{  State whether the following statements are TRUE or FALSE
+Several processes may have read locks on some file region, but only one process can have a write lock on it at the same time. …………………..
+It is possible to get a write lock when another process owns a read lock for the same file region, and vice versa …………….……}\\
+{\color{red}answer}\\
+\item \textbf{  What is meant by Advisory Locking?}\\
+{\color{red}answer}\\
+\item \textbf{  What is meant by Mandatory Locking?}\\
+{\color{red}answer}\\
+\item \textbf{  Distinguish between shared lock and exclusive lock. Explain why they are required.}\\
+{\color{red}answer}\\
+\item \textbf{  Distinguish between Advisory and Mandatory Locking.}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the following two system calls that can be used to perform Advisory file locking}\\
+a) fcntl( )\\{\color{red}answer}\\
+ b) flock( )\\{\color{red}answer}\\
+\item \textbf{  What are the second and third arguments of fcntl() system call. Why are they required.}\\
+{\color{red}answer}\\
+\item \textbf{  Write the system call which can be used to lock a specified region of a file.}\\
+{\color{red}answer}\\
+\item \textbf{  Write the system call which can be used to lock only whole file.}\\
+{\color{red}answer}\\
+\item \textbf{  Describe the purpose of fcntl() based mandatory lock named lease.}\\
+{\color{red}answer}\\
+\item \textbf{  Describe the two steps to implement mandatory file locking in linux.}\\
+{\color{red}answer}\\
+\item \textbf{  Describe the two ways in which a process can get or release an advisory file lock on a file.}\\
+{\color{red}answer}\\
+\item \textbf{  State the purpose of setuid and setgid permission bits.}\\
+{\color{red}answer}\\
+\item \textbf{  Give linux commands to perform the following operations :}\\
+a) setuid\\{\color{red}answer}\\
+ b) setgid\\{\color{red}answer}\\
+\item \textbf{  Indicate the operations performed by the following commands :}\\
+Chmod u+s file\\{\color{red}answer}\\
+chmod g+s file\\{\color{red}answer}\\
+chmod 4777 file1\\{\color{red}answer}\\
+chmod 2764 file2\\{\color{red}answer}\\
+chmod 6764 file3\\{\color{red}answer}\\
+\item \textbf{  Write the purpose of the following linux commands:}\\
+find / -type f -perm /6000\\{\color{red}answer}\\
+find / -type f -perm /4000\\{\color{red}answer}\\
+find / -type f -perm /2000\\{\color{red}answer}\\
+\item \textbf{  Explain how lease lock is implemented in linux using the system call fcntl().}\\
+{\color{red}answer}\\
+\end{enumerate}
+
+\textbf{MEMORY MANAGEMENT (CHAPTER 6)}
+
+\begin{enumerate}
+\item \textbf{  Explain the following:}\\
+a) Memory Management\\{\color{red}answer}\\
+b) Virtual memory\\{\color{red}answer}\\
+c) Protected memory\\{\color{red}answer}\\
+d) Shared memory\\{\color{red}answer}\\
+\item \textbf{ Explain why the kernel must keep track of the current status of each page frame.}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the purpose of page descriptors.}\\
+{\color{red}answer}\\
+\item \textbf{ State information of a page frame is kept in a page descriptor of type ………}\\
+{\color{red}answer}\\
+\item \textbf{  All page descriptors are stored in the …………… array.}\\
+{\color{red}answer}\\
+\item \textbf{  Size of each page descriptor is …… bytes}\\
+a) 8\\{\color{red}answer}\\
+ b) 16\\ {\color{red}answer}\\
+ c) 32\\ {\color{red}answer}\\
+ d) 64\\{\color{red}answer}\\
+\item \textbf{  Given a main memory of 4GB, determine the maximum number of page frames in this memory and the size of the mem\_map array required to store all the page descriptors.}\\
+{\color{red}answer}\\
+\item \textbf{  The …………… macro yields the address of the page descriptor associated with the linear address addr.}\\
+{\color{red}answer}\\
+\item \textbf{  The …………….. macro yields the address of the page descriptor associated with the page frame having number pfn.}\\
+{\color{red}answer}\\
+\item \textbf{  State the purpose of the following macros :}\\
+a) virt\_to\_page(addr) \\{\color{red}answer}\\
+b) pfn\_to\_page(pfn)\\{\color{red}answer}\\
+\item \textbf{  Describe the purpose of the following fields in the page descriptor :}\\
+a) flags \\{\color{red}answer}\\
+b) \_count c) \_mapcount \\{\color{red}answer}\\
+d) private\\{\color{red}answer}\\
+e) mapping \\{\color{red}answer}\\
+f) index \\{\color{red}answer}\\
+g) lru\\{\color{red}answer}\\
+\item \textbf{  Explain the following :}\\
+a) Uniform Memory Access Architecture (UMA)\\{\color{red}answer}\\
+b) Non-Uniform Memory Access Architecture (NUMA)\\{\color{red}answer}\\
+\item \textbf{  Indicate the number of memory nodes in UMA architecture.}\\
+{\color{red}answer}\\
+\item \textbf{  Indicate the maximum number of memory nodes in NUMA architectures considering both 32-bit and 64-bit architectures.}\\
+{\color{red}answer}\\
+\item \textbf{  Maximum number of memory nodes in 32-bit architecture is ……... and number of bits required in flags field to store both zone and node numbers is ……….}\\
+{\color{red}answer}\\
+\item \textbf{  Maximum number of memory nodes in 64-bit architecture is ……... and number of bits required in flags field to store both zone and node numbers is ……….}\\
+{\color{red}answer}\\
+\item \textbf{  Discuss the two hardware constraints of the 80x86 32-bit architecture that may limit the way page frames can be used.}\\
+{\color{red}answer}\\
+\item \textbf{  Explain how Linux Partitions the physical memory of every memory node into Memory zones. Describe these Memory zones}\\
+{\color{red}answer}\\
+\item \textbf{  Which field bits in the page descriptor are used to specify the memory node number and the zone number? How many bits are used to specify memory node number and the zone number in UMA and NUMA architectures?}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the following :}\\
+a) DMA Zone \\{\color{red}answer}\\
+b) NORMAL Zone \\{\color{red}answer}\\
+c) HIGH MEMORY Zone\\{\color{red}answer}\\
+\item \textbf{  Size of DMA Zone is ………MB and size of NORMAL Zone is ………. MB}\\
+{\color{red}answer}\\
+\item \textbf{  Explain what is meant by Page reclaiming. Indicate when is it required and which kernel thread is invoked to perform page reclaiming.}\\
+{\color{red}answer}\\
+\item \textbf{  State the purpose of the kernel thread kswapd.}\\
+{\color{red}answer}\\
+\item \textbf{  Each node has a descriptor of type ………… and all node descriptors are stored in a singly linked list, whose first element is pointed to by the ……… variable.}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the purpose of the following fields in memory zone descriptor :}\\
+a) Free\_pages \\{\color{red}answer}\\
+b) pages\_min \\{\color{red}answer}\\
+c) pages\_low\\{\color{red}answer}\\
+d) pages\_high \\{\color{red}answer}\\
+e) lowmem\_reserve\\{\color{red}answer}\\
+\item \textbf{  State the purpose of the function page\_zone().}\\
+{\color{red}answer}\\
+\item \textbf{  What are Pool of Reserved Page Frames? Why are they required? Where they are located?}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the two kernel control paths which make use of atomic memory allocation requests. State the need for having these separate memory allocation requests.}\\
+{\color{red}answer}\\
+\item \textbf{  Write the expression for computing reserved pool size. What are the minimum and maximum values of the reserved pool size that can be stored in the variable min\_free\_kbytes? Also specify the directly mapped memory sizes used to compute these values.}\\
+{\color{red}answer}\\
+\item \textbf{  Describe the approach used to build the pool of Reserved Page frames by considering the sizes of DMA Zone and NORMAL Zone.}\\
+{\color{red}answer}\\
+\item \textbf{  State the purpose of pages\_min field in the memory zone descriptor. Show how this field is used to compute values of pages\_low and pages\_high fields in the zone descriptor?}\\
+{\color{red}answer}\\
+\item \textbf{  With the help of a schematic, describe the Zoned Page Frame Allocator. Explain the purpose of all the components in the system.}\\
+{\color{red}answer}\\
+\item \textbf{ Describe the following components in the Zoned Page Frame Allocator:}\\
+a) Zone Allocator \\{\color{red}answer}\\
+b) Buddy System \\{\color{red}answer}\\
+c) Per-CPU Page Frame Cache{\color{red}answer}\\
+\item \textbf{ Describe the SIX different functions used to request page frames allocation.}\\
+{\color{red}answer}\\
+\item \textbf{ What is gfp\_mask parameter in allocation function? Why is it required?}\\
+{\color{red}answer}\\
+\item \textbf{ State the purpose of \_\_GFP\_DMA and \_\_GFP\_HIGHMEM flags of the gfp\_mask.}\\
+{\color{red}answer}\\
+\item \textbf{  Describe the FOUR different functions used to release page frames.}\\
+{\color{red}answer}\\
+\item \textbf{  Describe the approach adopted on 32-bit architectures to exploit all the available RAM, up to the 64 GB supported by PAE.}\\
+{\color{red}answer}\\
+\item \textbf{ Discuss the three different mechanisms used by the kernel to map page frames in high memory.}\\
+{\color{red}answer}\\
+\item \textbf{ Describe the following mechanisms used by the kernel to map page frames in high memory clearly providing the approach used.}\\
+a) Permanent Kernel Mapping\\{\color{red}answer}\\
+b) Temporary Kernel mapping\\{\color{red}answer}\\
+c) Non-contiguous Memory Allocation\\{\color{red}answer}\\
+\item \textbf{ What are the two major problems of Memory Management tackled by Buddy algorithm?}\\
+{\color{red}answer}\\
+\item \textbf{ Explain the following memory management problems :}\\
+a) External Fragmentation\\{\color{red}answer}\\
+b) Internal Fragmentation\\{\color{red}answer}\\
+\item \textbf{ Describe the working of a Buddy System Algorithm through a simple example and state how this algorithm gets the name Buddy}\\
+{\color{red}answer}\\
+\item \textbf{ What are the functions used to allocate and deallocate a block in a zone?}\\
+{\color{red}answer}\\
+\item \textbf{ State the purpose of Per\_CPU Page frame cache.}\\
+{\color{red}answer}\\
+\item \textbf{ Describe the two per-CPU Page fame caches defined for each memory zone.}\\
+{\color{red}answer}\\
+\item \textbf{ Explain the following Per\_CPU page frame caches:}\\
+a) Hot cache\\{\color{red}answer}\\
+ b) Cold cache\\{\color{red}answer}\\
+\item \textbf{  Write the functions used to allocate and release page frames from the Per\_CPU page frame cache.}\\
+{\color{red}answer}\\
+\item \textbf{  Describe the functions of a zone allocator}\\
+{\color{red}answer}\\
+\item \textbf{  Explain what is meant by internal Fragmentation. Describe the approach used by Linux Kernel to reduce Internal fragmentation}\\
+{\color{red}answer}\\
+\item \textbf{  Running a memory area allocation algorithm on top of the buddy algorithm is not particularly efficient. Discuss the better approach used in linux kernel to achieve the efficiency.}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the following :}\\
+a) Slab\\{\color{red}answer}\\
+ b) object\\{\color{red}answer}\\
+\item \textbf{  With a suitable schematic, describe the functions of a Slab Allocator. Clearly explain the functions of each component in the slab allocator.}\\
+{\color{red}answer}\\
+\item \textbf{  What are General and Specific caches?}\\
+{\color{red}answer}\\
+\item \textbf{  Write the functions for allocating a slab to a cache and destroying a slab from a cache.}\\
+{\color{red}answer}\\
+\item \textbf{  With the help of a schematic, explain the relationship between slab and object descriptors.}\\
+{\color{red}answer}\\
+\item \textbf{  Explain what is meant by aligning objects in memory. Why is it required?}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the need for Slab Coloring mechanism.}\\
+{\color{red}answer}\\
+\item \textbf{  Describe the approach used in slab coloring mechanism to reduce higher hardware cache misses.}\\
+{\color{red}answer}\\
+\item \textbf{  Write the expression for computing the length of a slab clearly explaining the various parameters used in the expression.}\\
+{\color{red}answer}\\
+\item \textbf{  With the help of a schematic, illustrate how the placement of objects inside the slab depends on the slab color.}\\
+{\color{red}answer}\\
+\item \textbf{  Explain what is meant by General Purpose object.}\\
+{\color{red}answer}\\
+\item \textbf{  Describe the memory Pool of a kernel component. Indicate clearly where it is located.}\\
+{\color{red}answer}\\
+\item \textbf{  Explain the need for Non-Contiguous Memory Area.}\\
+{\color{red}answer}\\
+\item \textbf{  Describe Non-Contiguous Memory Area Management in Linux}\\
+{\color{red}answer}\\
+\item \textbf{  Draw the memory layout of the kernel memory (fourth GB of RAM) showing all the memory areas (NORMAL Zone (Physical Memory Mapping), Non-Contiguous Memory Area, Memory areas used for Persistent Kernel mappings and fix-mapped linear addresses), their sizes, starting and ending addresses of each of these memory areas. Also show how non-contiguous blocks are allocated in the memory area.}\\
+{\color{red}answer}\\
+\item \textbf{  Provide the addresses stored in following parameters :}\\
+{\color{red}answer}\\
+a) PAGE\_OFFSET\\{\color{red}answer}\\
+ b) PKMAP\_BASE\\{\color{red}answer}\\
+\item \textbf{  State the need for inserting safety interval between the end of the physical memory mapping and the first memory area and additional safety intervals to separate non-contiguous memory areas in the kernel memory. Also indicate the size of these safety intervals.}\\
+{\color{red}answer}\\
+\item \textbf{  What are the functions used to allocate and release Non-contiguous memory Areas.}\\
+{\color{red}answer}\\
+\item \textbf{ Given the following Memory layout containing 10 memory areas with their sizes, determine the start and end address of each of these memory areas assuming that the start address of first memory area (MA1) is 0x70000000.}\\
+{\color{red}answer}\\
+
+\begin{tabular}{c c c c c c c c c c}
+\\MA1&MA2&MA3&MA4&MA5&MA6&MA7&MA8&MA9&MA10\\
+364MB&184MB&296MB&88MB&540MB&56MB&32MB&128MB&256MB&52MB\\
+\end{tabular}
+\end{enumerate}
+
+\textbf{  PROCESS ADDRESS SPACE (CHAPTER 7)\\}
+\begin{enumerate}
+
+\item \textbf{ State the three functions used by the kernel to get dynamic memory.}\\
+{\color{red}answer}\\
+\item \textbf{ What is meant by a memory region.}\\
+{\color{red}answer}\\
+\item \textbf{ Explain what is meant by address space of a process.}\\
+{\color{red}answer}\\
+\item \textbf{ Indicate some typical situations in which a process gets new memory regions}\\
+{\color{red}answer}\\
+\item \textbf{ Explain the purpose of the following system calls :}\\
+a) brk()\\
+{\color{red}answer}\\
+ b) execve()\\
+ {\color{red}answer}\\
+  c) fork()\\
+  {\color{red}answer}\\
+   d) mmap()\\
+{\color{red}answer}\\
+e) mremap()\\
+{\color{red}answer}\\
+ f) munmap()\\
+ {\color{red}answer}\\ 
+ g) shmat() \\
+ {\color{red}answer}\\
+ h) shmdt()
+{\color{red}answer}\\
+\item \textbf{ What is a Page Fault Exception?}\\
+{\color{red}answer}\\
+\item \textbf{ What are the two main causes for generating page fault exception?}\\
+{\color{red}answer}\\
+\item \textbf{ Explain what is meant by memory descriptor. Why is it required?}\\
+{\color{red}answer}\\
+\item \textbf{ Describe some of the important fields in the memory descriptor.}\\
+{\color{red}answer}\\
+\item \textbf{ Explain the purpose of the following fields in the memory descriptor :}\\
+a) mmap\\
+{\color{red}answer}\\
+ b) mm\_rb \\
+ {\color{red}answer}\\
+ c) mm\_users \\
+ {\color{red}answer}\\
+ d) mm\_count\\
+{\color{red}answer}\\
+e) map\_count \\
+{\color{red}answer}\\
+f) start\_code, end\_code \\
+{\color{red}answer}\\
+g) start\_data, end\_data\\
+{\color{red}answer}\\
+h) start\_brk \\
+{\color{red}answer}\\
+i) start-stack \\
+{\color{red}answer}\\
+j) arg\_start, arg\_end \\
+{\color{red}answer}\\
+k)env\_start, env\_end\\
+{\color{red}answer}\\
+\item \textbf{ Write the functions used to get a new memory descriptor and release a memory descriptor.}\\
+{\color{red}answer}\\
+\item \textbf{ What are the two kinds of memory descriptor pointers included in every process descriptor? Why are they required?}\\
+{\color{red}answer}\\
+\item \textbf{ Describe the memory region objects. Explain the various fields in the memory region object data structure.}\\
+{\color{red}answer}\\
+\item \textbf{ Explain the purpose of the following fields in the memory region object :}\\
+a) vm\_mm \\
+{\color{red}answer}\\
+b) vm\_start \\
+{\color{red}answer}\\
+c) vm\_end \\
+{\color{red}answer}\\
+d) vm\_next \\
+{\color{red}answer}\\
+e) vm\_page\_prot\\
+{\color{red}answer}\\
+f) vm\_flags \\
+{\color{red}answer}\\
+g) vm\_rb\\
+{\color{red}answer}\\
+\item \textbf{ Write the four methods to act on a memory region that are applicable to UMA systems.}\\
+{\color{red}answer}\\
+\item \textbf{ The kernel finds the memory regions through the ……….. field of the process memory descriptor, which points to the first memory region descriptor in the list.}\\
+{\color{red}answer}\\
+\item \textbf{ The …………. field of the memory descriptor contains the number of regions owned by the process.}\\
+{\color{red}answer}\\
+\item \textbf{ By default, a process may own up to …………. different memory regions.}\\
+a) 4096 \\
+{\color{red}answer}\\
+b) 65535 \\
+{\color{red}answer}\\
+c) 32,768 \\
+{\color{red}answer}\\
+d) 65,536\\
+{\color{red}answer}\\
+\item \textbf{ With the help of a schematic, illustrate the relationships among the address space of a process, its memory descriptor, and the list of memory regions.}\\
+{\color{red}answer}\\
+\item \textbf{ Describe the data structure used by Linux to store memory descriptors for implementing efficient search, insertion and deletion.}\\
+{\color{red}answer}\\\item \textbf{ Describe the red-black tree data structure used by Linux to store memory descriptors for implementing efficient search, insertion and deletion.}\\
+{\color{red}answer}\\
+\item \textbf{ What are the three kinds of flags associated with a page?}\\
+{\color{red}answer}\\
+\item \textbf{ List the descriptors or entries containing three kinds of flags associated with a page.}\\
+{\color{red}answer}\\
+\item \textbf{ State the purpose of the Read/Write, Present, and User/Supervisor flags in each Page Table entry.}\\
+{\color{red}answer}\\
+\item \textbf{ Discuss memory region flags.}\\
+{\color{red}answer}\\
+\item \textbf{ State the purpose of NX flag in the processor.}\\
+{\color{red}answer}\\
+\item \textbf{ Write the low-level functions to perform the following operations on a memory region descriptor.}\\
+a) Finding the closest region to a given address\\
+{\color{red}answer}\\
+b) Finding a region that overlaps a given interval\\
+{\color{red}answer}\\
+c) Finding a free interval\\
+{\color{red}answer}\\
+d) Inserting a region in the memory descriptor list\\
+{\color{red}answer}\\
+e) Releasing a region from the memory descriptor list\\
+{\color{red}answer}\\
+\item \textbf{ State the purpose of the following low-level functions in linux and provide the format of each of these functions.}\\
+a) Find\_vma() \\
+{\color{red}answer}\\
+b) find\_vma\_intersection()\\
+{\color{red}answer}\\
+ c) get\_unmapped\_area()\\
+ {\color{red}answer}\\
+d) insert\_vm\_struct()\\
+ {\color{red}answer}\\
+ e) do\_mmap()\\
+ {\color{red}answer}\\
+  f) do\_munmap() \\
+  {\color{red}answer}\\
+  g) vma\_link()\\
+{\color{red}answer}\\
+h) vma\_unlink() \\
+{\color{red}answer}\\
+i) split\_vma()
+{\color{red}answer}\\
+\item \textbf{ Explain the purpose of do\_page\_fault() function.}\\
+{\color{red}answer}\\
+\item \textbf{ What are the two input parameters required by the do\_page\_fault() function? How does the function distinguish between two kinds of page fault exceptions?}\\
+\item \textbf{ With the help of a schematic, describe the linux Page Fault Exception handler overall scheme.}\\
+{\color{red}answer}\\
+\item \textbf{ Daw the complete flow diagram of the Page Fault Handler and explain all the steps of the Page Fault handler.}\\
+{\color{red}answer}\\
+\item \textbf{ Explain what is meant by demand paging.}\\
+{\color{red}answer}\\
+\item \textbf{ Explain the Copy On Write Approach in Linux}\\
+{\color{red}answer}\\
+\item \textbf{ State the purpose of copy\_mm() function.}\\
+{\color{red}answer}\\
+\item \textbf{ Write the system call to create a lightweight process.}\\
+{\color{red}answer}\\
+\item \textbf{ State the purpose of exit\_mm() function.}\\
+{\color{red}answer}\\
+\item \textbf{ List and explain all the APIs that can be used by the process to request and release dynamic memory.}\\
+{\color{red}answer}\\
+\item \textbf{ Explain the following APIs that can be used by the process to request and release dynamic memory:}\\
+a) malloc(size) \\
+{\color{red}answer}\\
+b) calloc(n, size) \\
+{\color{red}answer}\\
+c) realloc(ptr, size)\\
+{\color{red}answer}\\
+d) free(addr) \\
+{\color{red}answer}\\
+e) brk(addr) \\
+{\color{red}answer}\\
+f) sbrk(incr)\\
+{\color{red}answer}\\
+\item \textbf{ State the purpose of sys\_brk(addr) function.}\\
+{\color{red}answer}\\
+\end{enumerate}
+
+ \textbf{SYSTEM CALLS \& SIGNALS (CHAPTER 8 \& 9)}\\
+\begin{enumerate}
+\item \textbf{ What are System Calls? }\\
+{\color{red}System call is an explicit request to the kernel made via a software interrupt}\\
+\item \textbf{ What are APIs?}\\
+{\color{red}API is a function definition that specifies how to obtain a given service}\\
+\item \textbf{ Distinguish between APIs and System Calls.}\\
+{\color{red}API could offer its services in USER Mode\\
+single API can make several system calls\\
+AP could make system call but with extra funcionality}\\
+\item \textbf{ What is the relation between APIs and System Calls?}\\
+{\color{red}each system call coressponds to a wrapper routine the wrapper routine defines API,but an  API does not necessarily correspond to a specific system call}\\
+\item \textbf{ Draw the Control Flow Diagram of a System Call showing the relationships among the application program that invokes a system call, the corresponding wrapper routine, the system call handler, and the system call service routine.}\\
+\begin{figure}[H]
+ \centering
+  \includegraphics{12.jpg}
+  \label{fig:13}
+\end{figure}
+\item \textbf{ What are the operations performed by a System call handler?}\\
+{\color{red}saves the contents of most registers in the kernel mode stack\\
+handles the system call by invoking a corresponding C function called the system call service routine\\
+exit from the handler by means of the ret\_from\_sys\_call() function}\\
+\item \textbf{ What is a signal. State the two main purposes served by a signal.}\\
+{\color{red}A signal is a very short message that may be sent to a process or a group of processes.\\
+Signals serve two main purposes:\\
+- To make a process aware that a specific event has occurred\\
+- To cause a process to execute a signal handler function included in its code
+}\\
+\item \textbf{ State the difference between regular (standard) signals and real-time signals.}\\
+{\color{red}regular signals only one pending signal of given type may exist for a process\\
+real-time: there can be several pending signals of the same type}\\
+\item \textbf{ The number of regular signals in linux is …… ( numbered from … to….) and the number of POSIX real-time signals supported in linux is …………..(numbered from …. to ……).}\\
+{\color{red}31\ 1 to 31\\33\ 32 to 64}\\
+\item \textbf{ The following table lists the names of the signals handled by Linux for the 80x86 architecture. Write the purpose/function associated with each of the signal and default action performed :}\\
+
+
+\begin{tabular}{c c c c}
+\\ \# & Signal Name & Purpose &  Default Action\\
+1 & SIGHUP & {\color{red}hang up controlling terminal or processes} & {\color{red} terminate}\\
+2 & SIGINT  & {\color{red}interrupt from keyboard} & {\color{red}terminate} \\
+3 & SIGQUIT  & {\color{red}quit from keyboard} & {\color{red} dump} \\
+4 & SIGILL  & {\color{red} illegal instruction} & {\color{red} dump} \\ 
+5 & SIGTRAP  & {\color{red} breakpoint of debugging} & {\color{red} dump}\\
+6 & SIGABRT  & {\color{red} abnormal termination} & {\color{red} dump}\\
+7 & SIGBUS  & {\color{red} buss error} & {\color{red} dump}\\
+8 & SIGFPE  &{\color{red} floating point exeption} & {\color{red} dump}\\
+9 & SIGKILL  & {\color{red} forced process termination} & {\color{red} terminate}\\
+11 & SIGSEGV  & {\color{red} invalid memory referense} & {\color{red} dump}\\
+14 & SIGALRM  & {\color{red} real clock timer} & {\color{red} terminate}\\
+15 & SIGTERM  & {\color{red} process termination} & {\color{red} terminate}\\
+17 & SIGCHLD  & {\color{red} child process stopped or terminated} & {\color{red} ignore}\\
+18 & SIGCONT  & {\color{red} resume execution if stopped} & {\color{red} continue}\\
+19 & SIGSTOP  & {\color{red} stop process execution} & {\color{red} stop}\\
+\end{tabular}
+
+
+
+\item \textbf{ Describe the following two different phases related to signal transmission/reception:}\\
+a) Signal Generation (sending)\\
+{\color{red}the kernel updates a data structure of the destination process to represent that a new signal has been sent}\\
+ b) Signal Delivery (Receiving)\\
+{\color{red}the kernel forces the destination process to react to the signal by changing its execution state,by starting the execution of the specified seignal handler or both}\\
+\item \textbf{ What are pending signals?}\\
+{\color{red}signals that have been generated but not yet delivered are called pending signals}\\
+\item \textbf{ Describe the Actions Performed by a process upon Delivering (Receiving) a Signal.}\\
+{\color{red}1. Explicitly ignore the signal.
+\\2. Execute the default action associated with the signal. This action, which is predefined by the kernel, depends on the signal type and may be any one of the following: Terminate,  Dump, Ignore, Stop
+\\3. Catch the signal by invoking a corresponding signal-handler function
+}\\
+\item \textbf{ What are the three ways in which a process can respond to a signal?}\\
+{\color{red}- The destination process is not traced by another process .\\
+- The signal is not blocked by the destination process.
+\\- The signal is being ignored by the destination process}\\
+\item \textbf{ List all the conditions that can generate Signals?}\\
+{\color{red}a}\\
+\item \textbf{ Explain what is meant by a fatal signal for a given process.}\\
+{\color{red}A signal is fatal for a given process if delivering the signal causes the kernel to kill the process.
+The SIGKILL signal is always fatal; moreover, each signal whose default action is "Terminate" and which is not caught by a process is also fatal for that process.
+}\\
+\item \textbf{ Distinguish between blocking and ignoring signals. Indicate the two signals which cannot be ignored, caught, or blocked, and their default actions must always be executed.}\\
+{\color{red}A signal is not delivered as long as it is blocked; it is delivered only after it has been unblocked. 
+An ignored signal is always delivered, and there is no further action. 
+The SIGKILL and SIGSTOP signals cannot be ignored, caught, or blocked, and their default actions must always be executed (terminate, stop).
+}\\
+\item \textbf{ Explain what is meant by catching a signal.}\\
+{\color{red}using handle\_signal() and signal handler in user mode}\\
+\item \textbf{ With the help of a schematic, illustrate the flow of execution of the functions involved in catching a signal.}\\
+\begin{figure}[H]
+ \centering
+  \includegraphics{13.jpg}
+  \label{fig:14}
+\end{figure}
+\item \textbf{ Explain the following system calls associated with the signals}\\
+a)kill \\
+{\color{red}sys\_kill()\\1. pid \textgreater 0 The sig signal is sent to the thread group of the process whose PID is equal to pid. 
+\\2. pid = 0 The sig signal is sent to all thread groups of the processes in the same process group as the calling process. 
+\\3. pid = -1 The signal is sent to all processes, except swapper (PID 0), init (PID 1), and current. 
+\\4. pid \textless -1 The signal is sent to all thread groups of the processes in the process group -pid.
+}\\
+b) tkill( ) \\
+{\color{red}expects two parameters pid of the process to be seignaled and the signal number}\\
+c) tgkill( )\\
+{\color{red}expects three inputs  pid of the process to be seignaled and the signal number and thread group id of the group thath ncludes the process to be signaled}\\
+\end{enumerate}
+\end{flushleft}
+
+
+\end{document}
